@@ -1,35 +1,25 @@
-import * as React from 'react';
-import { Text, SafeAreaView, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { Text, SafeAreaView, FlatList, TouchableOpacity, View } from 'react-native';
 import decClassItemSelector from '../model/DecimalClassifierElementSelector';
+import fetchPosts from '../model/PostsSource';
 
-const samplePostGenerator = (post_date) => {
-    return {
-        date: post_date,
-        author: "Shadi Barghash",
-        shortDescription: "This is the first post von Shadi.",
-        comments: [
-            {
-                id: '1',
-                author: "Mohammed",
-                content: "Great Job, Shadi!"
-            },
-            {
-                id: '2',
-                author: "Ali",
-                content: "Menawwar el denya!!"
-            }
-        ]
-    }
+const extendPostsOnEndReached = (posts, new_post_date) => {
+    var newPost = fetchPosts(2, 10).pop();
+    newPost.date = new_post_date.toString();
+    posts.push(newPost);
 }
 
-const posts = [
-    samplePostGenerator("22/11/2020"),
-    samplePostGenerator("23/11/2020"),
-    samplePostGenerator("24/11/2020"),
-    samplePostGenerator("25/11/2020")
-];
-
 const HomeScreen = ({ navigation }) => {
+
+    const [ isRefreshing, setIsRefreshing ] = useState(false);
+
+    var posts = [];
+
+    const refreshPosts = () => {
+        setIsRefreshing(true);
+        fetchPosts(2, 10).forEach((post) => { posts.push(post) });
+        setIsRefreshing(false);
+    }
 
     const PostItem = ({ item, index, sep }) => {
         
@@ -42,9 +32,21 @@ const HomeScreen = ({ navigation }) => {
         onPress={() => navigation.navigate('PostDetail', { post: item })}>
             <Text>Post Date: {item.date}</Text>
             <Text>Author: {item.author}</Text>
-            <Text>{item.shortDescription}</Text>
-            <Text>Number of comments: {item.comments.length}</Text>
+            <Text numberOfLines={1} ellipsizeMode='tail' style={{fontWeight: 'bold'}} >{item.description}</Text>
+            <Text>Number of comments: {item?.comments ? item.comments.length : ""}</Text>
         </TouchableOpacity>
+        );
+    };
+
+    const seperator = () => {
+        return (
+            <Text>------</Text>
+        );
+    };
+
+    const emptyList = () => {
+        return (
+            <View style={{flex: 1, alignContent: 'center', justifyContent: 'center'}}><Text>It seems that there are no more hackers. How about reading about Culture?</Text></View>
         );
     };
 
@@ -53,7 +55,12 @@ const HomeScreen = ({ navigation }) => {
       <FlatList
       data={posts}
       renderItem={PostItem}
-      keyExtractor={(item) => item.date} />
+      keyExtractor={(item) => item.date}
+      ItemSeparatorComponent={seperator}
+      ListEmptyComponent={emptyList}
+      onEndReached={(info) => { extendPostsOnEndReached(posts, Date.now()) }}
+      onRefresh={refreshPosts}
+      refreshing={isRefreshing}/>
     </SafeAreaView>
   );
 };

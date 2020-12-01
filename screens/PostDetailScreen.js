@@ -18,7 +18,7 @@ const PostDetailScreen = ({ navigation, route }) => {
                 <Text>Post Date: {post.date}</Text>
                 <Text>Author: {post.author}</Text>
                 <Text>Content:</Text>
-                <Text>{post.longDescription}</Text>
+                <Text style={{fontFamily: 'Arial', fontSize: 16}}>{post.description}</Text>
                 <Text>Comments:</Text>
                 <FlatList
                 data={post.comments}
